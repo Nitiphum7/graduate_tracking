@@ -10,7 +10,9 @@ from django.views.generic.base import TemplateView
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LogoutView
 from graduate_tracking.views import dashboard_view
-
+from students.views import StudentListView, StudentDetailView
+from advisors.views import AdvisorListView, AdvisorDetailView
+from theses.views import ThesisListView, ThesisDetailView
 
 router = DefaultRouter() 
 router.register(r'advisors', AdvisorViewSet)
@@ -70,3 +72,14 @@ urlpatterns = [
     ])),
     path('dashboard/', dashboard_view, name='dashboard'), 
 ]
+
+path('students/', include([
+    path('', StudentListView.as_view(), name='student_list'),
+    path('<int:pk>/', StudentDetailView.as_view(), name='student_detail'),
+])),
+
+path('advisors/', AdvisorListView.as_view(), name='advisor_list'),
+path('advisors/<int:pk>/', AdvisorDetailView.as_view(), name='advisor_detail'),
+
+path('theses/', ThesisListView.as_view(), name='thesis_list'),
+path('theses/<int:pk>/', ThesisDetailView.as_view(), name='thesis_detail'),

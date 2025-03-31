@@ -7,6 +7,8 @@ from .permissions import IsStudentOrAdvisorOrAdmin
 from django.db import models
 from django.contrib.auth.models import User  
 from . import serializers  
+from django.views.generic import ListView, DetailView
+from .models import Student
 
 
 
@@ -58,3 +60,14 @@ class EnglishExamResultViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['student', 'exam_type', 'status']
     ordering_fields = ['exam_date']
+
+class StudentListView(ListView):
+    model = Student
+    template_name = 'students/list.html'
+    context_object_name = 'students'
+
+
+class StudentDetailView(DetailView):
+    model = Student
+    template_name = 'students/detail.html'
+    context_object_name = 'student'
