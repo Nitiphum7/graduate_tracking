@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}รายชื่ออาจารย์ที่ปรึกษา{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-5 mb-0">
+            <i class="fas fa-chalkboard-teacher me-2"></i>รายการอาจารย์ที่ปรึกษา
+        </h1>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+            <i class=""></i> Home
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="advisorsTable">
+                <thead>
+                    <tr>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>หลักสูตร</th>
+                        <th>การดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dataTable = $('#advisorsTable').DataTable({
+            columns: [
+                { data: 'fullname' },
+                { data: 'program' },
+                { data: 'actions' }
+            ],
+            language: {
+                search: "ค้นหา:",
+                lengthMenu: "แสดง _MENU_ รายการ",
+                info: "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
+                infoEmpty: "แสดง 0 ถึง 0 จาก 0 รายการ",
+                infoFiltered: "(กรองจากทั้งหมด _MAX_ รายการ)",
+                paginate: {
+                    first: "หน้าแรก",
+                    last: "หน้าสุดท้าย",
+                    next: "ถัดไป",
+                    previous: "ก่อนหน้า"
+                }
+            },
+            pageLength: 10,
+            ordering: true
+        });
+
+        fetch('/api/advisors/')
+            .then(response => response.json())
+            .then(data => {
+                const advisors = data.results.map(advisor => ({
+                    fullname: `${advisor.academic_title} ${advisor.user.first_name} ${advisor.user.last_name}`,
+                    department: advisor.department,
+                    program: advisor.program ? advisor.program.name : 'ไม่ระบุ',
+                    actions: `<a href="/advisors/${advisor.id}/" class="btn btn-sm btn-primary">
+                                <i class="fas fa-eye"></i> รายละเอียด
+                              </a>`
+                }));
+
+                dataTable.clear().rows.add(advisors).draw();
+            });
+    });
+</script>
+{% endblock %}

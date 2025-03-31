@@ -1,0 +1,347 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ข้อมูลนักศึกษา | ระบบติดตามข้อมูลนักศึกษา{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-5 mb-0">
+            <i class="fas fa-user-graduate me-2"></i>ข้อมูลนักศึกษา
+        </h1>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{% url 'student_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> กลับ
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>ข้อมูลทั่วไป
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="avatar-placeholder mb-3">
+                        <i class="fas fa-user-graduate fa-5x text-muted"></i>
+                    </div>
+                    <h4 id="student-name">กำลังโหลด...</h4>
+                    <h5 id="student-id" class="text-muted"></h5>
+                    <span id="student-status" class="badge bg-secondary">-</span>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">อีเมล</label>
+                    <p id="student-email">-</p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">วันที่เข้าศึกษา</label>
+                    <p id="student-enrollment-date">-</p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">คาดว่าจะจบการศึกษา</label>
+                    <p id="student-expected-graduation">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-graduation-cap me-2"></i>ข้อมูลการศึกษา
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">หลักสูตร</label>
+                        <p id="student-program">-</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">ระดับการศึกษา</label>
+                        <p id="student-degree">-</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">อาจารย์ที่ปรึกษาหลัก</label>
+                        <p id="student-advisor">-</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">อาจารย์ที่ปรึกษาร่วม</label>
+                        <p id="student-co-advisor">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-language me-2"></i>ผลการสอบภาษาอังกฤษ
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="english-exams-table">
+                        <thead>
+                            <tr>
+                                <th>ประเภทการสอบ</th>
+                                <th>วันที่สอบ</th>
+                                <th>คะแนน</th>
+                                <th>ผลการสอบ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- จะถูกเติมด้วย JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-alt me-2"></i>ข้อมูลวิทยานิพนธ์
+                </h5>
+            </div>
+            <div class="card-body" id="thesis-section">
+                <!-- จะถูกเติมด้วย JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get student ID from URL
+        const urlParts = window.location.pathname.split('/');
+        const studentId = urlParts[urlParts.length - 2];
+        
+        // Fetch student data
+        fetch(`/api/students/${studentId}/`)
+            .then(response => response.json())
+            .then(student => {
+                // General information
+                document.getElementById('student-name').textContent = `${student.user.first_name} ${student.user.last_name}`;
+                document.getElementById('student-id').textContent = student.student_id;
+                
+                const statusBadge = document.getElementById('student-status');
+                statusBadge.textContent = student.status_display;
+                
+                switch(student.status) {
+                    case 'active':
+                        statusBadge.className = 'badge bg-success';
+                        break;
+                    case 'leave':
+                        statusBadge.className = 'badge bg-warning';
+                        break;
+                    case 'graduated':
+                        statusBadge.className = 'badge bg-info';
+                        break;
+                    case 'terminated':
+                        statusBadge.className = 'badge bg-danger';
+                        break;
+                    default:
+                        statusBadge.className = 'badge bg-secondary';
+                }
+                
+                document.getElementById('student-email').textContent = student.user.email || '-';
+                document.getElementById('student-enrollment-date').textContent = formatDate(student.enrollment_date);
+                document.getElementById('student-expected-graduation').textContent = 
+                    student.expected_graduation_date ? formatDate(student.expected_graduation_date) : 'ไม่ระบุ';
+                
+                // Academic information
+                document.getElementById('student-program').textContent = student.program.name;
+                document.getElementById('student-degree').textContent = student.program.degree_type_display;
+                document.getElementById('student-advisor').textContent = student.advisor ? 
+                    `${student.advisor.academic_title} ${student.advisor.user.first_name} ${student.advisor.user.last_name}` : 'ไม่ระบุ';
+                document.getElementById('student-co-advisor').textContent = student.co_advisor ? 
+                    `${student.co_advisor.academic_title} ${student.co_advisor.user.first_name} ${student.co_advisor.user.last_name}` : 'ไม่ระบุ';
+                
+                // Fetch English exam results
+                fetch(`/api/english-exams/?student=${student.id}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const tableBody = document.querySelector('#english-exams-table tbody');
+                        tableBody.innerHTML = '';
+                        
+                        if (data.results.length === 0) {
+                            const row = document.createElement('tr');
+                            row.innerHTML = '<td colspan="4" class="text-center">ไม่พบข้อมูลการสอบภาษาอังกฤษ</td>';
+                            tableBody.appendChild(row);
+                        } else {
+                            data.results.forEach(exam => {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td>${exam.exam_type_display}</td>
+                                    <td>${formatDate(exam.exam_date)}</td>
+                                    <td>${exam.score}</td>
+                                    <td>
+                                        <span class="badge bg-${exam.status === 'pass' ? 'success' : 'danger'}">
+                                            ${exam.status_display}
+                                        </span>
+                                    </td>
+                                `;
+                                tableBody.appendChild(row);
+                            });
+                        }
+                    });
+                
+                // Fetch thesis information
+                fetch(`/api/thesis-proposals/?student=${student.id}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const thesisSection = document.getElementById('thesis-section');
+                        
+                        if (data.results.length === 0) {
+                            thesisSection.innerHTML = `
+                                <div class="text-center py-4">
+                                    <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
+                                    <h5>ยังไม่มีข้อมูลวิทยานิพนธ์</h5>
+                                </div>
+                            `;
+                        } else {
+                            const thesis = data.results[0];
+                            
+                            let thesisContent = `
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">หัวข้อวิทยานิพนธ์</label>
+                                    <p>${thesis.title}</p>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">บทคัดย่อ</label>
+                                    <p>${thesis.abstract}</p>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">วันที่ส่งหัวข้อ</label>
+                                        <p>${formatDate(thesis.submission_date)}</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">วันที่สอบหัวข้อ</label>
+                                        <p>${thesis.exam_date ? formatDate(thesis.exam_date) : 'ยังไม่กำหนด'}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">สถานะการสอบหัวข้อ</label>
+                                    <p>
+                                        <span class="badge bg-${getThesisStatusBadgeColor(thesis.status)}">
+                                            ${thesis.status_display}
+                                        </span>
+                                    </p>
+                                </div>
+                            `;
+                            
+                            // Thesis committee
+                            if (thesis.committee_members.length > 0) {
+                                thesisContent += `
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">คณะกรรมการสอบวิทยานิพนธ์</label>
+                                        <ul class="list-group">
+                                `;
+                                
+                                thesis.committee_members.forEach(member => {
+                                    thesisContent += `
+                                        <li class="list-group-item">
+                                            ${member.is_chair ? '<span class="badge bg-primary me-2">ประธาน</span>' : ''}
+                                            ${member.advisor.academic_title} ${member.advisor.user.first_name} ${member.advisor.user.last_name}
+                                        </li>
+                                    `;
+                                });
+                                
+                                thesisContent += `
+                                        </ul>
+                                    </div>
+                                `;
+                            }
+                            
+                            // Thesis defense if available
+                            fetch(`/api/thesis-defenses/?thesis_proposal=${thesis.id}`)
+                                .then(response => response.json())
+                                .then(defenseData => {
+                                    if (defenseData.results.length > 0) {
+                                        const defense = defenseData.results[0];
+                                        
+                                        thesisContent += `
+                                            <hr>
+                                            <h5 class="mb-3">การสอบปกป้องวิทยานิพนธ์</h5>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-bold">วันที่สอบ</label>
+                                                    <p>${formatDate(defense.defense_date)}</p>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-bold">สถานะการสอบ</label>
+                                                    <p>
+                                                        <span class="badge bg-${getThesisStatusBadgeColor(defense.status)}">
+                                                            ${defense.status_display}
+                                                        </span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">หมายเหตุ</label>
+                                                <p>${defense.comments || '-'}</p>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-bold">กำหนดส่งแก้ไข</label>
+                                                    <p>${defense.revision_due_date ? formatDate(defense.revision_due_date) : '-'}</p>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-bold">วันที่ส่งฉบับสมบูรณ์</label>
+                                                    <p>${defense.final_submission_date ? formatDate(defense.final_submission_date) : '-'}</p>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }
+                                    
+                                    thesisSection.innerHTML = thesisContent;
+                                });
+                        }
+                    });
+            });
+    });
+    
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+    
+    function getThesisStatusBadgeColor(status) {
+        switch(status) {
+            case 'pending': return 'warning';
+            case 'passed': return 'success';
+            case 'passed_with_revision': return 'info';
+            case 'failed': return 'danger';
+            default: return 'secondary';
+        }
+    }
+</script>
+{% endblock %}

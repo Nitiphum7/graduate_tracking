@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}รายละเอียดวิทยานิพนธ์ | ระบบติดตามข้อมูลนักศึกษาระดับบัณฑิตศึกษา{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-5 mb-0">
+            <i class="fas fa-book me-2"></i>{{ thesis.title_th }}
+        </h1>
+        <p class="text-muted">{{ thesis.title_en }}</p>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h4>ข้อมูลนักศึกษา</h4>
+                <p><strong>ชื่อ:</strong> {{ thesis.student.user.first_name }} {{ thesis.student.user.last_name }}</p>
+                <p><strong>อีเมล:</strong> {{ thesis.student.user.email }}</p>
+            </div>
+            <div class="col-md-6">
+                <h4>ข้อมูลอาจารย์ที่ปรึกษา</h4>
+                <p>
+                    {% if thesis.advisor %}
+                        <strong>ชื่อ:</strong> {{ thesis.advisor.user.first_name }} {{ thesis.advisor.user.last_name }}<br>
+                        <strong>อีเมล:</strong> {{ thesis.advisor.user.email }}
+                    {% else %}
+                        ไม่มีอาจารย์ที่ปรึกษา
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h4>สถานะวิทยานิพนธ์</h4>
+                <span class="badge bg-{{ thesis.status|status_badge_color }}">{{ thesis.get_status_display }}</span>
+            </div>
+            <div class="col-md-6">
+                <h4>วันที่สร้าง</h4>
+                <p>{{ thesis.created_at|date:"Y-m-d" }}</p>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="d-flex justify-content-end">
+            <a href="{% url 'theses:index' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> กลับ
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

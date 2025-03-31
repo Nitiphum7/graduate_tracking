@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ข้อมูลอาจารย์ที่ปรึกษา{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-5 mb-0">
+            <i class="fas fa-chalkboard-teacher me-2"></i>ข้อมูลอาจารย์ที่ปรึกษา
+        </h1>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{% url 'advisor_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> กลับ
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-tie me-2"></i>ข้อมูลทั่วไป
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="avatar-placeholder mb-3">
+                        <i class="fas fa-user-tie fa-5x text-muted"></i>
+                    </div>
+                    <h4 id="advisor-name">กำลังโหลด...</h4>
+                    <span id="advisor-department" class="badge bg-secondary">-</span>
+                </div>
+
+                <hr>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">อีเมล</label>
+                    <p id="advisor-email">-</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">เบอร์โทรศัพท์</label>
+                    <p id="advisor-phone">-</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">ที่ตั้งสำนักงาน</label>
+                    <p id="advisor-office-location">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chalkboard-teacher me-2"></i>ข้อมูลทางวิชาการ
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">ตำแหน่งทางวิชาการ</label>
+                    <p id="advisor-academic-title">-</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">ภาควิชา</label>
+                    <p id="advisor-department-detail">-</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">สาขาความเชี่ยวชาญ</label>
+                    <p id="advisor-expertise">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParts = window.location.pathname.split('/');
+        const advisorId = urlParts[urlParts.length - 2];
+
+        fetch(`/api/advisors/${advisorId}/`)
+            .then(response => response.json())
+            .then(advisor => {
+                document.getElementById('advisor-name').textContent = `${advisor.academic_title} ${advisor.user.first_name} ${advisor.user.last_name}`;
+                document.getElementById('advisor-department').textContent = advisor.department || '-';
+                document.getElementById('advisor-email').textContent = advisor.user.email || '-';
+                document.getElementById('advisor-phone').textContent = advisor.phone_number || 'ไม่ระบุ';
+                document.getElementById('advisor-office-location').textContent = advisor.office_location || 'ไม่ระบุ';
+                document.getElementById('advisor-academic-title').textContent = advisor.academic_title || '-';
+                document.getElementById('advisor-department-detail').textContent = advisor.department || '-';
+                document.getElementById('advisor-expertise').textContent = advisor.field_of_expertise || '-';
+            });
+    });
+</script>
+{% endblock %}

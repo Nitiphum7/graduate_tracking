@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block title %}รายการวิทยานิพนธ์ | ระบบติดตามข้อมูลนักศึกษาระดับบัณฑิตศึกษา{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-5 mb-0">
+            <i class="fas fa-book me-2"></i>รายการวิทยานิพนิตย์
+        </h1>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <div class="btn-group" role="group" aria-label="ตัวกรอง">
+            <button type="button" class="btn btn-outline-primary filter-btn" data-filter="all">ทั้งหมด</button>
+            <button type="button" class="btn btn-outline-primary filter-btn" data-filter="approved">อนุมัติแล้ว</button>
+            <button type="button" class="btn btn-outline-primary filter-btn" data-filter="under_review">อยู่ระหว่างตรวจสอบ</button>
+            <button type="button" class="btn btn-outline-primary filter-btn" data-filter="rejected">ไม่ผ่าน</button>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="ค้นหา...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select id="advisorFilter" class="form-select">
+                    <option value="">ทุกอาจารย์ที่ปรึกษา</option>
+                    {% for advisor in advisors %}
+                        <option value="{{ advisor.id }}">{{ advisor.first_name }} {{ advisor.last_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="thesesTable">
+                <thead>
+                    <tr>
+                        <th>ชื่อวิทยานิพนธ์ (ไทย)</th>
+                        <th>ชื่อวิทยานิพนธ์ (อังกฤษ)</th>
+                        <th>นักศึกษา</th>
+                        <th>อาจารย์ที่ปรึกษา</th>
+                        <th>สถานะ</th>
+                        <th>วันที่สร้าง</th>
+                        <th>การดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for thesis in theses %}
+                    <tr>
+                        <td>{{ thesis.title_th }}</td>
+                        <td>{{ thesis.title_en }}</td>
+                        <td>{{ thesis.student.user.first_name }} {{ thesis.student.user.last_name }}</td>
+                        <td>
+                            {% if thesis.advisor %}
+                                {{ thesis.advisor.first_name }} {{ thesis.advisor.last_name }}
+                            {% else %}
+                                ไม่มี
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ thesis.status|status_badge_color }}">{{ thesis.get_status_display }}</span>
+                        </td>
+                        <td>{{ thesis.created_at|date:"Y-m-d" }}</td>
+                        <td>
+                            <a href="{% url 'thesis_detail' thesis.id %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-eye"></i> รายละเอียด
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if theses|length == 0 %}
+                    <tr>
+                        <td class="text-center">-</td>
+                        <td class="text-center">-</td>
+                        <td class="text-center">-</td>
+                        <td class="text-center">-</td>
+                        <td class="text-center">-</td>
+                        <td class="text-center">-</td>
+                        <td class="text-center">ไม่มีข้อมูล</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const table = $('#thesesTable').DataTable({
+            language: {
+                search: "ค้นหา:",
+                lengthMenu: "แสดง _MENU_ รายการ",
+                info: "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
+                infoEmpty: "แสดง 0 ถึง 0 จาก 0 รายการ",
+                infoFiltered: "(กรองจากทั้งหมด _MAX_ รายการ)",
+                paginate: {
+                    first: "หน้าแรก",
+                    last: "หน้าสุดท้าย",
+                    next: "ถัดไป",
+                    previous: "ก่อนหน้า"
+                }
+            },
+            pageLength: 10,
+            dom: 'lrtip',
+            ordering: true
+        });
+
+        // Search filter
+        $('#searchInput').on('keyup', function() {
+            table.search(this.value).draw();
+        });
+
+        // Advisor filter
+        $('#advisorFilter').on('change', function() {
+            const selected = this.value;
+            if (selected) {
+                table.column(3).search($(this).find("option:selected").text()).draw();
+            } else {
+                table.column(3).search('').draw();
+            }
+        });
+
+        // Status filter buttons
+        $('.filter-btn').on('click', function() {
+            const status = $(this).data('filter');
+            if (status === 'all') {
+                table.column(4).search('').draw();
+            } else {
+                const label = $(this).text().trim();
+                table.column(4).search(label).draw();
+            }
+        });
+    });
+</script>
+{% endblock %}

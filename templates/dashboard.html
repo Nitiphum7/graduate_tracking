@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}แดชบอร์ด | ระบบติดตามข้อมูลนักศึกษา{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/style.css">
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="display-5 mb-4">
+            <i class="fas fa-tachometer-alt me-2"></i>แดชบอร์ด
+        </h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-user-graduate me-2"></i>นักศึกษาทั้งหมด
+                </h5>
+                <h2 class="card-text" id="total-students">-</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-chalkboard-teacher me-2"></i>อาจารย์ที่ปรึกษา
+                </h5>
+                <h2 class="card-text" id="total-advisors">-</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-book me-2"></i>หลักสูตร
+                </h5>
+                <h2 class="card-text" id="total-programs">-</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-file-alt me-2"></i>วิทยานิพนธ์
+                </h5>
+                <h2 class="card-text" id="total-theses">-</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>นักศึกษาตามสถานะ
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="student-status-chart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>นักศึกษาตามหลักสูตร
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="student-program-chart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tasks me-2"></i>วิทยานิพนธ์ที่กำลังดำเนินการ
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="active-theses-table">
+                        <thead>
+                            <tr>
+                                <th>รหัสนักศึกษา</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>หัวข้อวิทยานิพนธ์</th>
+                                <th>อาจารย์ที่ปรึกษา</th>
+                                <th>สถานะ</th>
+                                <th>การดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script src="/static/js/main.js"></script>
+{% endblock %}

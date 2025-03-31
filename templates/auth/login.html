@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}เข้าสู่ระบบ | ระบบติดตามข้อมูลนักศึกษา{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h4 class="mb-0">
+                    <i class="fas fa-sign-in-alt me-2"></i>เข้าสู่ระบบ
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>เกิดข้อผิดพลาด:</strong> ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาลองอีกครั้ง
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">ชื่อผู้ใช้</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <input type="text" name="username" id="id_username" class="form-control" placeholder="ชื่อผู้ใช้" required autofocus>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">รหัสผ่าน</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" name="password" id="id_password" class="form-control" placeholder="รหัสผ่าน" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="id_remember" name="remember">
+                        <label class="form-check-label" for="id_remember">จดจำการเข้าสู่ระบบ</label>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>เข้าสู่ระบบ
+                        </button>
+                    </div>
+                    
+                    <input type="hidden" name="next" value="{{ next }}">
+                </form>
+            </div>
+            <div class="card-footer text-center py-3">
+                <a href="{% url 'password_reset' %}" class="text-decoration-none">ลืมรหัสผ่าน?</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

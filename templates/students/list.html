@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}รายการนักศึกษา | ระบบติดตามข้อมูลนักศึกษา{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-5 mb-0">
+            <i class="fas fa-user-graduate me-2"></i>รายการนักศึกษา
+        </h1>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <div class="btn-group" role="group" aria-label="ตัวกรอง">
+            <button type="button" class="btn btn-outline-primary filter-btn" data-filter="all">ทั้งหมด</button>
+            <button type="button" class="btn btn-outline-primary filter-btn" data-filter="active">กำลังศึกษา</button>
+            <button type="button" class="btn btn-outline-primary filter-btn" data-filter="graduated">จบการศึกษา</button>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="ค้นหา...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select id="programFilter" class="form-select">
+                    <option value="">ทุกหลักสูตร</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select id="advisorFilter" class="form-select">
+                    <option value="">ทุกอาจารย์ที่ปรึกษา</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="studentsTable">
+                <thead>
+                    <tr>
+                        <th>รหัสนักศึกษา</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>หลักสูตร</th>
+                        <th>วันที่เข้าศึกษา</th>
+                        <th>อาจารย์ที่ปรึกษา</th>
+                        <th>สถานะ</th>
+                        <th>การดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let students = [];
+        let dataTable;
+        let programs = {};
+        let advisors = {};
+
+        dataTable = $('#studentsTable').DataTable({
+            columns: [
+                { data: 'student_id' },
+                { data: 'fullname' },
+                { data: 'program' },
+                { data: 'enrollment_date' },
+                { data: 'advisor' },
+                { data: 'status' },
+                { data: 'actions' }
+            ],
+            language: {
+                search: "ค้นหา:",
+                lengthMenu: "แสดง _MENU_ รายการ",
+                info: "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
+                infoEmpty: "แสดง 0 ถึง 0 จาก 0 รายการ",
+                infoFiltered: "(กรองจากทั้งหมด _MAX_ รายการ)",
+                paginate: {
+                    first: "หน้าแรก",
+                    last: "หน้าสุดท้าย",
+                    next: "ถัดไป",
+                    previous: "ก่อนหน้า"
+                }
+            },
+            pageLength: 10,
+            dom: 'lrtip',
+            ordering: true
+        });
+
+        fetchStudentData();
+
+        fetch('/api/programs/')
+            .then(response => response.json())
+            .then(data => {
+                const programSelect = document.getElementById('programFilter');
+                data.results.forEach(program => {
+                    programs[program.id] = program.name;
+                    const option = document.createElement('option');
+                    option.value = program.id;
+                    option.textContent = program.name;
+                    programSelect.appendChild(option);
+                });
+            });
+
+        fetch('/api/advisors/')
+            .then(response => response.json())
+            .then(data => {
+                const advisorSelect = document.getElementById('advisorFilter');
+                data.results.forEach(advisor => {
+                    const fullName = `${advisor.user.first_name} ${advisor.user.last_name}`;
+                    advisors[advisor.id] = fullName;
+                    const option = document.createElement('option');
+                    option.value = advisor.id;
+                    option.textContent = fullName;
+                    advisorSelect.appendChild(option);
+                });
+            });
+
+        document.getElementById('programFilter').addEventListener('change', function() {
+            applyFilters();
+        });
+
+        document.getElementById('advisorFilter').addEventListener('change', function() {
+            applyFilters();
+        });
+
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            dataTable.search(this.value).draw();
+        });
+
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active', 'btn-primary');
+                    btn.classList.add('btn-outline-primary');
+                });
+                this.classList.add('active', 'btn-primary');
+                this.classList.remove('btn-outline-primary');
+                applyFilters();
+            });
+        });
+
+        document.querySelector('.filter-btn[data-filter="all"]').click();
+
+        function fetchStudentData() {
+            fetch('/api/students/')
+                .then(response => response.json())
+                .then(data => {
+                    students = data.results.map(student => {
+                        const fullName = `${student.user.first_name} ${student.user.last_name}`;
+                        return {
+                            id: student.id,
+                            student_id: student.student_id,
+                            fullname: fullName,
+                            program: student.program.name,
+                            program_id: student.program.id,
+                            enrollment_date: formatDate(student.enrollment_date),
+                            advisor: student.advisor ? `${student.advisor.user.first_name} ${student.advisor.user.last_name}` : '-',
+                            advisor_id: student.advisor ? student.advisor.id : null,
+                            status: `<span class="badge bg-${getStatusBadgeColor(student.status)}">${student.status_display}</span>`,
+                            actions: `<a href="/students/${student.id}/" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> รายละเอียด
+                                      </a>`
+                        };
+                    });
+                    dataTable.clear().rows.add(students).draw();
+                });
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function getStatusBadgeColor(status) {
+            switch(status) {
+                case 'active': return 'success';
+                case 'leave': return 'warning';
+                case 'graduated': return 'info';
+                case 'terminated': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        function applyFilters() {
+            const programFilter = document.getElementById('programFilter').value;
+            const advisorFilter = document.getElementById('advisorFilter').value;
+            const statusFilter = document.querySelector('.filter-btn.active').getAttribute('data-filter');
+
+            let filteredStudents = students.filter(student => 
+                (programFilter === '' || student.program_id == programFilter) &&
+                (advisorFilter === '' || student.advisor_id == advisorFilter) &&
+                (statusFilter === 'all' || student.status === statusFilter)
+            );
+
+            dataTable.clear().rows.add(filteredStudents).draw();
+        }
+    });
+</script>
+{% endblock %}
